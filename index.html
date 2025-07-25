@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>None - ZyroCode</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!--
+       -Bản Quyền Thuộc Về : ATZ ZyroCode
+       -Share Lại Nhớ Ghi Nguồn Giúp Mình Ạ
+       -Liên Hệ : + FB : fb.com/atmtool1
+                  + Zalo : 0865181743
+                  + Telegram : t.me/zyrocodes
+    -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Kalam:wght@300;400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Kalam', cursive;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            cursor: none;
+        }
+        
+        .scene-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .scribble-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.4;
+        }
+        
+        .character-container {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            filter: drop-shadow(0 0 40px rgba(100, 150, 255, 0.6)) 
+                    drop-shadow(0 10px 30px rgba(0, 0, 0, 0.8));
+        }
+        
+        .character-image {
+            width: 300px;
+            height: auto;
+            max-height: 400px;
+            object-fit: contain;
+            animation: characterBreathe 6s ease-in-out infinite;
+            border-radius: 10px;
+        }
+        
+        @keyframes characterBreathe {
+            0%, 100% { transform: scale(1) translateY(0px); }
+            50% { transform: scale(1.02) translateY(-5px); }
+        }
+        
+        .character-glow {
+            position: absolute;
+            top: -30px;
+            left: -30px;
+            right: -30px;
+            bottom: -30px;
+            background: radial-gradient(ellipse at center, 
+                rgba(100, 150, 255, 0.3) 0%,
+                rgba(150, 200, 255, 0.15) 40%,
+                transparent 70%);
+            border-radius: 50%;
+            animation: glowPulse 8s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+        
+        @keyframes glowPulse {
+            0% { opacity: 0.3; transform: scale(0.8); }
+            100% { opacity: 0.7; transform: scale(1.4); }
+        }
+        
+        .lyrics-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            pointer-events: none;
+        }
+        
+        .lyric-line {
+            position: absolute;
+            font-family: 'Caveat', cursive;
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 
+                0 0 20px rgba(255, 255, 255, 0.6),
+                0 0 40px rgba(100, 150, 255, 0.5),
+                3px 3px 8px rgba(0, 0, 0, 0.9);
+            opacity: 0;
+            transform: translateY(100px) scale(0.7);
+            white-space: nowrap;
+            line-height: 1.3;
+            letter-spacing: 2px;
+            filter: blur(15px);
+            max-width: 40%;
+            word-wrap: break-word;
+        }
+        
+        .lyric-left {
+            left: 5%;
+            text-align: left;
+            transform-origin: left center;
+        }
+        
+        .lyric-right {
+            right: 5%;
+            text-align: right;
+            transform-origin: right center;
+        }
+        
+        .particles-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        
+        .audio-controls {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 30px;
+            border-radius: 50px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .play-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, 
+                rgba(100, 150, 255, 0.4) 0%,
+                rgba(150, 200, 255, 0.3) 100%);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .play-button:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, 
+                rgba(100, 150, 255, 0.6) 0%,
+                rgba(150, 200, 255, 0.4) 100%);
+        }
+        
+        .progress-container {
+            width: 300px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, 
+                rgba(100, 150, 255, 0.8) 0%,
+                rgba(150, 200, 255, 0.9) 100%);
+            width: 0%;
+            transition: width 0.1s ease;
+            border-radius: 4px;
+        }
+        
+        .time-display {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            font-weight: 300;
+            min-width: 90px;
+            text-align: center;
+        }
+        
+        .custom-cursor {
+            position: fixed;
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle, 
+                rgba(255, 255, 255, 0.8) 0%,
+                rgba(255, 255, 255, 0.3) 60%,
+                transparent 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+            mix-blend-mode: difference;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #000 0%, #1a1a2e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 2s ease;
+        }
+        
+        .loading-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 2rem;
+            font-weight: 400;
+            margin-bottom: 30px;
+            animation: loadingPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes loadingPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+        
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .character-image {
+                width: 220px;
+                max-height: 300px;
+            }
+            
+            .lyric-line {
+                font-size: clamp(1.8rem, 6vw, 3.5rem);
+                white-space: normal;
+                max-width: 85%;
+            }
+            
+            .lyric-left, .lyric-right {
+                left: 7.5%;
+                right: auto;
+                text-align: center;
+            }
+            
+            .progress-container {
+                width: 200px;
+            }
+            
+            .audio-controls {
+                padding: 12px 20px;
+                gap: 15px;
+            }
+        }
+        
+        .screen-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-text">Đang tải...</div>
+    </div>
+    
+    <div class="error-message" id="errorMessage">
+         
+    </div>
+    
+    <div class="custom-cursor" id="customCursor"></div>
+    
+    <div class="scene-container">
+        <canvas class="scribble-canvas" id="scribbleCanvas"></canvas>
+        <canvas class="particles-canvas" id="particlesCanvas"></canvas>
+        
+        <div class="character-container">
+            <div class="character-glow"></div>
+            <img class="character-image" id="characterImage" src="./img.png" alt="Sad Character">
+        </div>
+        
+        <div class="lyrics-container" id="lyricsContainer"></div>
+        
+        <div class="audio-controls">
+            <button class="play-button" id="playButton">▶</button>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+        </div>
+        
+        <audio id="audioPlayer" preload="auto">
+            <source src="./nhac.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+    <!--
+       -Bản Quyền Thuộc Về : ATZ ZyroCode
+       -Share Lại Nhớ Ghi Nguồn Giúp Mình Ạ
+       -Liên Hệ : + FB : fb.com/atmtool1
+                  + Zalo : 0865181743
+                  + Telegram : t.me/zyrocodes
+    -->
+    <script>
+        class Run {
+            constructor() {
+                this.nhac = document.getElementById('audioPlayer');
+                this.nutPlay = document.getElementById('playButton');
+                this.thanhTienTrinh = document.getElementById('progressBar');
+                this.vungTienTrinh = document.getElementById('progressContainer');
+                this.hienThoiGian = document.getElementById('timeDisplay');
+                this.vungLyric = document.getElementById('lyricsContainer');
+                this.chuotAo = document.getElementById('customCursor');
+                this.anhNhanVat = document.getElementById('characterImage');
+                
+                this.dangPhat = false;
+                this.duLieuSRT = [];
+                this.lyricDangHien = new Set();
+                this.duongVe = [];
+                this.hatBui = [];
+                this.daTaiXong = false;
+                this.lechLyric = -1.2;
+                
+                this.khoiTao();
+            }
+            
+            async khoiTao() {
+                this.caiDatCanvas();
+                this.caiDatSuKien();
+                this.batVeScribble();
+                this.batHatBui();
+                
+                try {
+                    await this.taiTaiNguyen();
+                    this.anLoading();
+                    this.batHoatCanh();
+                } catch (error) {
+                    this.hienLoi();
+                }
+            }
+            
+            async taiTaiNguyen() {
+                const dsPromise = [
+                    this.taiAnh('./img.png'),
+                    this.taiSRT('./lyric.srt'),
+                    this.taiNhac('./nhac.mp3')
+                ];
+                
+                await Promise.all(dsPromise);
+                this.daTaiXong = true;
+            }
+            
+            taiAnh(src) {
+                return new Promise((ok, loi) => {
+                    const img = new Image();
+                    img.onload = () => ok();
+                    img.onerror = () => loi(new Error(`Không tải được ảnh: ${src}`));
+                    img.src = src;
+                });
+            }
+            
+            async taiSRT(src) {
+                try {
+                    const res = await fetch(src);
+                    if (!res.ok) throw new Error(`Không tải được SRT: ${src}`);
+                    const noiDungSRT = await res.text();
+                    this.duLieuSRT = this.phanTichSRT(noiDungSRT);
+                } catch (error) {
+                    this.duLieuSRT = this.lyricDuPhong();
+                }
+            }
+            
+            taiNhac(src) {
+                return new Promise((ok, loi) => {
+                    this.nhac.addEventListener('canplaythrough', ok, { once: true });
+                    this.nhac.addEventListener('error', () => loi(new Error(`Không tải được nhạc: ${src}`)), { once: true });
+                    this.nhac.load();
+                });
+            }
+            
+            lyricDuPhong() {
+                return [];
+            }
+            
+            phanTichSRT(noiDungSRT) {
+                const khoi = noiDungSRT.trim().split(/\r?\n\r?\n/);
+                const dsLyric = [];
+                for (const dong of khoi) {
+                    const lines = dong.split(/\r?\n/);
+                    const dongThoiGian = lines.find(line => /-->/g.test(line));
+                    if (dongThoiGian) {
+                        const tgMatch = dongThoiGian.match(/(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/);
+                        if (tgMatch) {
+                            const batDau = this.chuyenGiay(tgMatch[1]);
+                            const ketThuc = this.chuyenGiay(tgMatch[2]);
+                            const idxThoiGian = lines.indexOf(dongThoiGian);
+                            const text = lines.slice(idxThoiGian + 1).join('\n');
+                            dsLyric.push({ start: batDau, end: ketThuc, text });
+                        }
+                    }
+                }
+                return dsLyric;
+            }
+            
+            chuyenGiay(chuoi) {
+                const [tg, ms] = chuoi.split(',');
+                const [h, m, s] = tg.split(':').map(Number);
+                return h * 3600 + m * 60 + s + ms / 1000;
+            }
+            
+            caiDatCanvas() {
+                this.scribbleCanvas = document.getElementById('scribbleCanvas');
+                this.scribbleCtx = this.scribbleCanvas.getContext('2d');
+                this.particlesCanvas = document.getElementById('particlesCanvas');
+                this.particlesCtx = this.particlesCanvas.getContext('2d');
+                
+                const doiSize = () => {
+                    this.scribbleCanvas.width = window.innerWidth;
+                    this.scribbleCanvas.height = window.innerHeight;
+                    this.particlesCanvas.width = window.innerWidth;
+                    this.particlesCanvas.height = window.innerHeight;
+                };
+                
+                doiSize();
+                window.addEventListener('resize', doiSize);
+                
+                for (let i = 0; i < 8; i++) {
+                    this.duongVe.push(this.taoDuongVe());
+                }
+                
+                for (let i = 0; i < 60; i++) {
+                    this.hatBui.push(this.taoHatBui());
+                }
+            }
+            
+            taoDuongVe() {
+                const tamX = this.scribbleCanvas.width / 2;
+                const tamY = this.scribbleCanvas.height / 2;
+                
+                return {
+                    points: [],
+                    maxPoints: Math.random() * 30 + 20,
+                    currentPoint: 0,
+                    centerX: tamX + (Math.random() - 0.5) * 200,
+                    centerY: tamY + (Math.random() - 0.5) * 200,
+                    radius: Math.random() * 100 + 50,
+                    angle: Math.random() * Math.PI * 2,
+                    angleSpeed: (Math.random() - 0.5) * 0.05,
+                    radiusVariation: Math.random() * 30 + 10,
+                    opacity: Math.random() * 0.4 + 0.2,
+                    fadeSpeed: Math.random() * 0.003 + 0.001,
+                    color: `rgba(${Math.random() * 100 + 100}, ${Math.random() * 100 + 150}, ${Math.random() * 100 + 200}, `,
+                    life: Math.random() * 500 + 200,
+                    chaosLevel: Math.random() * 0.3 + 0.1
+                };
+            }
+            
+            taoHatBui() {
+                return {
+                    x: Math.random() * this.particlesCanvas.width,
+                    y: Math.random() * this.particlesCanvas.height,
+                    size: Math.random() * 2 + 0.5,
+                    speedX: (Math.random() - 0.5) * 0.5,
+                    speedY: Math.random() * 1 + 0.2,
+                    opacity: Math.random() * 0.3 + 0.1,
+                    life: Math.random() * 300 + 100
+                };
+            }
+            
+            caiDatSuKien() {
+                this.nutPlay.addEventListener('click', () => this.chuyenTrangThai());
+                
+                this.vungTienTrinh.addEventListener('click', (e) => {
+                    const rect = this.vungTienTrinh.getBoundingClientRect();
+                    const percent = (e.clientX - rect.left) / rect.width;
+                    this.nhac.currentTime = percent * this.nhac.duration;
+                });
+                
+                this.nhac.addEventListener('timeupdate', () => this.capNhatTienTrinh());
+                this.nhac.addEventListener('loadedmetadata', () => this.capNhatThoiGian());
+                this.nhac.addEventListener('ended', () => this.resetNhac());
+                
+                document.addEventListener('mousemove', (e) => {
+                    gsap.to(this.chuotAo, {
+                        x: e.clientX - 12.5,
+                        y: e.clientY - 12.5,
+                        duration: 0.1,
+                        ease: "power2.out"
+                    });
+                });
+                
+                this.anhNhanVat.addEventListener('click', () => {
+                    this.tuongTacNhanVat();
+                });
+                
+                this.anhNhanVat.addEventListener('error', () => {
+                    this.hienLoi();
+                });
+            }
+            
+            async chuyenTrangThai() {
+                if (!this.daTaiXong) {
+                    return;
+                }
+                
+                if (this.dangPhat) {
+                    this.nhac.pause();
+                    this.nutPlay.textContent = '▶';
+                    this.dangPhat = false;
+                } else {
+                    try {
+                        if (this.nhac.muted) {
+                            await this.nhac.play();
+                            gsap.to(this.nhac, { volume: 1, duration: 2 });
+                        } else {
+                            await this.nhac.play();
+                        }
+                        
+                        this.nutPlay.textContent = '⏸';
+                        this.dangPhat = true;
+                        this.batDongBoLyric();
+                    } catch (error) {
+                        this.nhac.muted = true;
+                        this.nhac.volume = 0;
+                        await this.nhac.play();
+                        this.nutPlay.textContent = '⏸';
+                        this.dangPhat = true;
+                        this.batDongBoLyric();
+                    }
+                }
+            }
+            
+            batDongBoLyric() {
+                let lyricCuoi = -1;
+                const dongBo = () => {
+                    if (!this.dangPhat) return;
+
+                    const thoiGian = this.nhac.currentTime;
+
+                    let lyricHienTai = -1;
+                    for (let i = 0; i < this.duLieuSRT.length; i++) {
+                        const lyric = this.duLieuSRT[i];
+                        if (thoiGian >= lyric.start && thoiGian <= lyric.end) {
+                            lyricHienTai = i;
+                            break;
+                        }
+                    }
+
+                    if (
+                        lyricHienTai !== -1 &&
+                        this.duLieuSRT[lyricHienTai].start !== lyricCuoi
+                    ) {
+                        this.hienLyric(this.duLieuSRT[lyricHienTai].text, lyricHienTai);
+                        lyricCuoi = this.duLieuSRT[lyricHienTai].start;
+                        console.log(
+                            `[${thoiGian.toFixed(2)}] Lyric: (${this.duLieuSRT[lyricHienTai].start} - ${this.duLieuSRT[lyricHienTai].end})`,
+                            this.duLieuSRT[lyricHienTai].text
+                        );
+                    }
+
+                    requestAnimationFrame(dongBo);
+                };
+                dongBo();
+            }
+
+            hienLyric(text, index) {
+                const lyricElement = document.createElement('div');
+                lyricElement.className = `lyric-line ${index % 2 === 0 ? 'lyric-left' : 'lyric-right'}`;
+                lyricElement.id = `lyric-${index}-${Date.now()}`;
+
+                const maxTuMotDong = 8;
+                const tu = text.split(' ');
+                let textXuongDong = '';
+                for (let i = 0; i < tu.length; i++) {
+                    textXuongDong += tu[i];
+                    if ((i + 1) % maxTuMotDong === 0 && i !== tu.length - 1) {
+                        textXuongDong += '<br>';
+                    } else if (i !== tu.length - 1) {
+                        textXuongDong += ' ';
+                    }
+                }
+                lyricElement.innerHTML = textXuongDong;
+
+                lyricElement.style.top = `${15 + (index % 8) * 8}%`;
+
+                this.vungLyric.appendChild(lyricElement);
+
+                gsap.fromTo(lyricElement, 
+                    {
+                        opacity: 0,
+                        y: 100,
+                        scale: 0.7,
+                        rotation: index % 2 === 0 ? -10 : 10,
+                        filter: "blur(15px)"
+                    },
+                    {
+                        opacity: 1,
+                        y: 0,
+                        scale: 1,
+                        rotation: 0,
+                        filter: "blur(0px)",
+                        duration: 0.7,
+                        ease: "power3.out"
+                    }
+                );
+
+                gsap.to(lyricElement, {
+                    y: -15,
+                    duration: 4,
+                    ease: "power2.inOut",
+                    yoyo: true,
+                    repeat: -1
+                });
+
+                const thoiGianHien = Math.max(
+                    (this.duLieuSRT[index]?.end ?? 0) - (this.duLieuSRT[index]?.start ?? 0),
+                    1.5
+                );
+                setTimeout(() => {
+                    gsap.to(lyricElement, {
+                        opacity: 0,
+                        y: -80,
+                        scale: 0.6,
+                        rotation: index % 2 === 0 ? -20 : 20,
+                        filter: "blur(10px)",
+                        duration: 0.7,
+                        ease: "power2.in",
+                        onComplete: () => {
+                            lyricElement.remove();
+                        }
+                    });
+                }, thoiGianHien * 1000);
+            }
+            
+            batVeScribble() {
+                const veScribble = () => {
+                    this.scribbleCtx.fillStyle = 'rgba(10, 10, 10, 0.03)';
+                    this.scribbleCtx.fillRect(0, 0, this.scribbleCanvas.width, this.scribbleCanvas.height);
+                    
+                    this.duongVe.forEach((line, index) => {
+                        const radiusVariation = Math.sin(line.angle * 3) * line.radiusVariation;
+                        const currentRadius = line.radius + radiusVariation;
+                        
+                        const x = line.centerX + Math.cos(line.angle) * currentRadius + 
+                                 (Math.random() - 0.5) * line.chaosLevel * 50;
+                        const y = line.centerY + Math.sin(line.angle) * currentRadius + 
+                                 (Math.random() - 0.5) * line.chaosLevel * 50;
+                        
+                        if (line.currentPoint < line.maxPoints) {
+                            line.points.push({ x, y, opacity: line.opacity });
+                            line.currentPoint++;
+                        } else {
+                            line.points.shift();
+                            line.points.push({ x, y, opacity: line.opacity });
+                        }
+                        
+                        line.angle += line.angleSpeed;
+                        
+                        if (line.points.length > 1) {
+                            this.scribbleCtx.beginPath();
+                            this.scribbleCtx.strokeStyle = line.color + line.opacity + ')';
+                            this.scribbleCtx.lineWidth = Math.random() * 3 + 1;
+                            this.scribbleCtx.lineCap = 'round';
+                            this.scribbleCtx.lineJoin = 'round';
+                            
+                            this.scribbleCtx.moveTo(line.points[0].x, line.points[0].y);
+                            for (let i = 1; i < line.points.length - 1; i++) {
+                                const point = line.points[i];
+                                const nextPoint = line.points[i + 1];
+                                const cpx = (point.x + nextPoint.x) / 2;
+                                const cpy = (point.y + nextPoint.y) / 2;
+                                this.scribbleCtx.quadraticCurveTo(point.x, point.y, cpx, cpy);
+                            }
+                            this.scribbleCtx.stroke();
+                        }
+                        
+                        line.opacity -= line.fadeSpeed;
+                        line.life--;
+                        
+                        if (line.life <= 0 || line.opacity <= 0) {
+                            this.duongVe[index] = this.taoDuongVe();
+                        }
+                    });
+                    
+                    requestAnimationFrame(veScribble);
+                };
+                veScribble();
+            }
+            
+            batHatBui() {
+                const veHatBui = () => {
+                    this.particlesCtx.clearRect(0, 0, this.particlesCanvas.width, this.particlesCanvas.height);
+                    
+                    this.hatBui.forEach((particle, index) => {
+                        this.particlesCtx.beginPath();
+                        this.particlesCtx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                        this.particlesCtx.fillStyle = `rgba(173, 216, 230, ${particle.opacity})`;
+                        this.particlesCtx.fill();
+                        
+                        particle.x += particle.speedX;
+                        particle.y += particle.speedY;
+                        particle.life--;
+                        
+                        if (particle.life <= 0 || particle.y > this.particlesCanvas.height || 
+                            particle.x < 0 || particle.x > this.particlesCanvas.width) {
+                            this.hatBui[index] = this.taoHatBui();
+                        }
+                    });
+                    
+                    requestAnimationFrame(veHatBui);
+                };
+                veHatBui();
+            }
+            
+            tuongTacNhanVat() {
+                gsap.to(this.anhNhanVat, {
+                    scale: 0.95,
+                    rotation: -5,
+                    duration: 0.4,
+                    ease: "power2.out",
+                    yoyo: true,
+                    repeat: 1
+                });
+                
+                this.duongVe.forEach(line => {
+                    line.chaosLevel *= 2;
+                    line.opacity = Math.min(line.opacity * 1.5, 0.8);
+                });
+                
+                setTimeout(() => {
+                    this.duongVe.forEach(line => {
+                        line.chaosLevel /= 2;
+                    });
+                }, 2000);
+            }
+            
+            rungManHinh() {
+                document.querySelector('.scene-container').classList.add('screen-shake');
+                setTimeout(() => {
+                    document.querySelector('.scene-container').classList.remove('screen-shake');
+                }, 500);
+            }
+            
+            capNhatTienTrinh() {
+                if (this.nhac.duration) {
+                    const percent = (this.nhac.currentTime / this.nhac.duration) * 100;
+                    this.thanhTienTrinh.style.width = percent + '%';
+                    this.capNhatThoiGian();
+                }
+            }
+            
+            capNhatThoiGian() {
+                const hienTai = this.dinhDangThoiGian(this.nhac.currentTime);
+                const tong = this.dinhDangThoiGian(this.nhac.duration || 0);
+                this.hienThoiGian.textContent = `${hienTai} / ${tong}`;
+            }
+            
+            dinhDangThoiGian(giay) {
+                const phut = Math.floor(giay / 60);
+                const giayLe = Math.floor(giay % 60);
+                return `${phut}:${giayLe.toString().padStart(2, '0')}`;
+            }
+            
+            batHoatCanh() {
+                gsap.to(this.anhNhanVat, {
+                    scale: 1.03,
+                    duration: 6,
+                    ease: "power2.inOut",
+                    yoyo: true,
+                    repeat: -1
+                });
+            }
+            
+            resetNhac() {
+                this.dangPhat = false;
+                this.nutPlay.textContent = '▶';
+                this.thanhTienTrinh.style.width = '0%';
+                this.lyricDangHien.clear();
+                
+                document.querySelectorAll('.lyric-line').forEach(lyric => {
+                    lyric.remove();
+                });
+            }
+            
+            anLoading() {
+                setTimeout(() => {
+                    gsap.to('#loadingOverlay', {
+                        opacity: 0,
+                        duration: 2,
+                        ease: "power2.out",
+                        onComplete: () => {
+                            document.getElementById('loadingOverlay').style.display = 'none';
+                        }
+                    });
+                }, 100);
+            }
+            
+            hienLoi() {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            new Run();
+        });
+    </script>
+    <!--
+       -Bản Quyền Thuộc Về : ATZ ZyroCode
+       -Share Lại Nhớ Ghi Nguồn Giúp Mình Ạ
+       -Liên Hệ : + FB : fb.com/atmtool1
+                  + Zalo : 0865181743
+                  + Telegram : t.me/zyrocodes
+    -->
+</body>
+</html>
